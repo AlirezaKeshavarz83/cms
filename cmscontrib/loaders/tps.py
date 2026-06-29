@@ -100,9 +100,24 @@ class TpsTaskLoader(TaskLoader):
 
         if task_type == 'Communication':
             par_processes = '%s_num_processes' % par_prefix
+            par_compilation = '%s_compilation' % par_prefix
+            par_user_io = '%s_user_io' % par_prefix
             if par_processes not in task_type_parameters:
                 task_type_parameters[par_processes] = 1
-            return [task_type_parameters[par_processes], "stub", "std_io"]
+            if par_compilation not in task_type_parameters:
+                task_type_parameters[par_compilation] = 'stub'
+            if par_user_io not in task_type_parameters:
+                task_type_parameters[par_user_io] = 'std_io'
+
+            checker_dir = os.path.join(self.path, "checker")
+            checker_src = os.path.join(checker_dir, "checker.cpp")
+
+            return [
+                task_type_parameters[par_processes],
+                task_type_parameters[par_compilation],
+                task_type_parameters[par_user_io],
+                "eval_checker" if os.path.exists(checker_src) else "eval_manager"
+            ]
 
         if task_type == 'TwoSteps' or task_type == 'OutputOnly':
             return [evaluation_param]
@@ -212,7 +227,7 @@ class TpsTaskLoader(TaskLoader):
             output_testcases = \
                 output_optional_testcases | output_only_testcases
             data["output_testcases"] = output_testcases
-        
+
         # Setting the submission format
         if data["task_type"] == 'OutputOnly':
             args["submission_format"] = list()
